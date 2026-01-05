@@ -1,0 +1,12 @@
+name: indextts-cpu
+services:
+    indextts:
+        stdin_open: true
+        tty: true
+        container_name: indextts
+        volumes:
+            - /etc/timezone:/etc/timezone:ro
+            - /etc/localtime:/etc/localtime:ro
+        ports:
+            - 17860:7860
+        image: toarujs/indextts:1.5-cpu

@@ -1,0 +1,43 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY ./indextts /app/
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y \
+    ffmpeg \
+    libavcodec-dev \
+    libavformat-dev \
+    libavutil-dev \
+    libswresample-dev \
+    bc
+
+# Upgrade pip and essential packages
+RUN pip install --upgrade pip setuptools wheel
+
+# Copy requirements and install Python dependencies
+RUN pip install -r requirements.txt gradio==3.50.2 pydub modelscope && \
+    pip install -e ".[webui]" && \
+    modelscope download --model IndexTeam/IndexTTS-1.5 --local_dir ./checkpoints/ && \
+    pip install ffmpeg && \
+    pip install torchcodec && \
+    pip install --upgrade torch torchaudio && \
+    pip uninstall -y torch torchaudio torchcodec && \
+    pip install torch==2.3.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu118 && \
+    pip install torchcodec==0.4.0
+
+
+# Expose port for web UI
+EXPOSE 7860
+
+RUN apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/* \
+    && rm -rf /root/.cache/* \
+    && find /app -name "*.pyc" -delete \
+    && find /app -name "__pycache__" -type d -exec rm -rf {} +
+
+# Default command to run web UI
+CMD ["python", "webui.py", "--host", "0.0.0.0", "--port", "7860"]
